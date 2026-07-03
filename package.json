@@ -1,0 +1,29 @@
+{
+  "name": "file-forge-api",
+  "version": "1.0.0",
+  "description": "A Backend Service to analyze large files like (.log, .csv, .txt) and return valuable insights of the File",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node --watch --env-file=.env src/index.js",
+    "start": "node --env-file=.env src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ameer77-tech/file-forge.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Ameer77-tech/file-forge/issues"
+  },
+  "homepage": "https://github.com/Ameer77-tech/file-forge#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "helmet": "^8.2.0",
+    "zod": "^4.4.3"
+  }
+}
