@@ -3,6 +3,8 @@ import cors from "cors";
 import helmet from "helmet";
 import env from "./config/env.js";
 import { httpLogger } from "./middlewares/requestsLogger.js";
+import errorMiddleware from "./middlewares/error.middlware.js";
+import NotFoundError from "./errors/NotFound.js";
 
 const app = express();
 
@@ -19,5 +21,10 @@ app.use(urlencoded({ extended: true }));
 app.get("/api/v1/health", (req, res) => {
   res.send("Running");
 });
+
+app.use((req, res, next) => {
+  throw new NotFoundError(`Route ${req.url} method ${req.method} not found`);
+});
+app.use(errorMiddleware);
 
 export default app;
