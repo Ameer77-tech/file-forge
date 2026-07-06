@@ -59,13 +59,13 @@ export const upload = multer({
     const isAllowedExtension = allowedExtensions.has(extension);
     const isAllowedMimeType = allowedMimeTypes.has(mimetype);
 
-    if (!file || !file.originalname) {
-      logger.warn(
-        { event: "upload.fileFilter.invalid" },
-        "Upload rejected because no file was provided",
-      );
-      return cb(new BadRequestError("No file uploaded"));
-    }
+    // if (!file || !file.originalname) {  // DEAD CODE NOT NEEDED IF THERE IS NO FILE UPLOADED AT ALL
+    //   logger.warn(
+    //     { event: "upload.fileFilter.invalid" },
+    //     "Upload rejected because no file was provided",
+    //   );
+    //   return cb(new BadRequestError("No file uploaded"), false);
+    // }
 
     if (!isAllowedExtension && !isAllowedMimeType) {
       logger.warn(

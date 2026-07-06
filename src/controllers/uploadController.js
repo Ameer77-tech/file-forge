@@ -9,18 +9,21 @@ export const uploadController = (req, res, next) => {
   const normalizedType = contentType.toLowerCase();
 
   if (normalizedType.includes("multipart/form-data")) {
-    const uploadResult = saveMultipartUpload(req);
+    try {
+      const uploadResult = saveMultipartUpload(req);
+      logger.info(
+        { event: "upload.controller.success" },
+        "Multipart upload handled",
+      );
 
-    logger.info(
-      { event: "upload.controller.success" },
-      "Multipart upload handled",
-    );
-
-    return res.status(200).json({
-      success: true,
-      message: "File uploaded successfully",
-      file: uploadResult,
-    });
+      return res.status(200).json({
+        success: true,
+        message: "File uploaded successfully",
+        file: uploadResult,
+      });
+    } catch (err) {
+      next(err);
+    }
   }
 
   const chunks = [];

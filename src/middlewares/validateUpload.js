@@ -8,8 +8,9 @@ const validateUpload = (req, res, next) => {
   if (!result.success) {
     const issue = result.error.issues[0];
     const message = issue?.message || "Invalid upload request";
+  
 
-    if (message === "Unsupported file type") {
+    if (message === "Unsupported file type") {    
       throw new UnsupportedMediaTypeError(message);
     }
 

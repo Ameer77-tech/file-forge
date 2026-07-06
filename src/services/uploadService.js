@@ -82,8 +82,7 @@ export const saveMultipartUpload = (req) => {
   );
 
   return {
-    filename: req.file.originalname,
-    size: req.file.size,
-    path: req.file.path,
+    filename: req.file.filename,
+    size: `${(req.file.size / 1024 / 1024).toFixed(2)} MB`,
   };
 };
