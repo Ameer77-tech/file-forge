@@ -66,8 +66,7 @@ export const upload = multer({
     //   );
     //   return cb(new BadRequestError("No file uploaded"), false);
     // }
-
-    if (!isAllowedExtension && !isAllowedMimeType) {
+    if (!isAllowedExtension || !isAllowedMimeType) {
       logger.warn(
         {
           event: "upload.fileFilter.rejected",
@@ -77,7 +76,8 @@ export const upload = multer({
         },
         "Unsupported file type",
       );
-      return cb(new UnsupportedMediaTypeError("Unsupported file type"));
+
+      return cb(new UnsupportedMediaTypeError("Unsupported file mime type"));
     }
 
     logger.info(

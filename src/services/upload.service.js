@@ -1,9 +1,10 @@
-import fs from "fs";
+import { promises as fs } from "fs";
 import path from "path";
 import crypto from "crypto";
 import logger from "../config/logger.js";
 import UnsupportedMediaTypeError from "../errors/UnsopportedMediaType.js";
 import BadRequestError from "../errors/BadRequest.js";
+import uploadedFiles from "../utils/metaData.js";
 
 const allowedMimeTypes = new Set([
   "text/plain",
@@ -39,8 +40,8 @@ export const saveRawUpload = ({ contentType, bodyBuffer, fileName }) => {
   const filename = `${crypto.randomUUID()}${extension || ".txt"}`;
   const filePath = path.join(uploadDir, filename);
 
-  fs.mkdirSync(uploadDir, { recursive: true });
-  fs.writeFileSync(filePath, bodyBuffer);
+  fs.mkdir(uploadDir, { recursive: true });
+  fs.writeFile(filePath, bodyBuffer);
 
   logger.info(
     {
@@ -80,9 +81,18 @@ export const saveMultipartUpload = (req) => {
     },
     "Multipart upload completed",
   );
-
-  return {
+  const metadata = {
+    originalName: req.file.originalname,
     filename: req.file.filename,
+    id: path.parse(req.file.filename).name,
+    path: req.file.destination,
+    mimetype: req.file.mimetype,
+    isAnalyzed: false,
+    size: `${(req.file.size / 1024 / 1024).toFixed(2)} MB`,
+  };
+  uploadedFiles.set(metadata.id, metadata);
+  return {
+    fileId: path.parse(req.file.filename).name,
     size: `${(req.file.size / 1024 / 1024).toFixed(2)} MB`,
   };
 };

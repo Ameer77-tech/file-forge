@@ -2,7 +2,7 @@ import logger from "../config/logger.js";
 import {
   saveMultipartUpload,
   saveRawUpload,
-} from "../services/uploadService.js";
+} from "../services/upload.service.js";
 
 export const uploadController = (req, res, next) => {
   const contentType = req.headers["content-type"] || "";
