@@ -7,6 +7,7 @@ import errorMiddleware from "./middlewares/error.middlware.js";
 import NotFoundError from "./errors/NotFound.js";
 import uploadRoutes from "./routes/upload.route.js";
 import analyzeRoutes from "./routes/analyze.route.js";
+import SuccessResponse from "./utils/SuccessResponse.js";
 
 const app = express();
 
@@ -21,7 +22,7 @@ app.use(express.json());
 app.use(urlencoded({ extended: true }));
 
 app.get("/api/v1/health", (req, res) => {
-  res.send("Running");
+  return SuccessResponse("Server Up and Running", null, res);
 });
 
 app.use("/api/v1", uploadRoutes);

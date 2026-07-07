@@ -88,11 +88,11 @@ export const saveMultipartUpload = (req) => {
     path: req.file.destination,
     mimetype: req.file.mimetype,
     isAnalyzed: false,
-    size: `${(req.file.size / 1024 / 1024).toFixed(2)} MB`,
+    size: `${(req.file.size / 1024 / 1024).toFixed(5)} MB`,
   };
   uploadedFiles.set(metadata.id, metadata);
   return {
     fileId: path.parse(req.file.filename).name,
-    size: `${(req.file.size / 1024 / 1024).toFixed(2)} MB`,
+    size: `${(req.file.size / 1024 / 1024).toFixed(5)} MB`,
   };
 };

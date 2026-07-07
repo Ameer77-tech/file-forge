@@ -3,6 +3,7 @@ import {
   saveMultipartUpload,
   saveRawUpload,
 } from "../services/upload.service.js";
+import SuccessResponse from "../utils/SuccessResponse.js";
 
 export const uploadController = (req, res, next) => {
   const contentType = req.headers["content-type"] || "";
@@ -42,11 +43,11 @@ export const uploadController = (req, res, next) => {
 
     logger.info({ event: "upload.controller.success" }, "Raw upload handled");
 
-    return res.status(200).json({
-      success: true,
-      message: "File uploaded successfully",
-      file: uploadResult,
-    });
+    return SuccessResponse(
+      "File Uploaded Successfully",
+      { file: uploadResult },
+      res,
+    );
   });
 
   req.on("error", (err) => next(err));
