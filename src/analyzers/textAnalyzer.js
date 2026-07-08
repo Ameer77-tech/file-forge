@@ -2,9 +2,7 @@ import fs from "fs";
 import path from "path";
 import readline from "readline";
 
-export async function analyzeTextFile(fileData) {
-  console.log(fileData);
-
+async function analyzeTextFile(fileData) {
   const stream = fs.createReadStream(
     path.join(fileData.path, fileData.filename),
     {
@@ -163,3 +161,5 @@ export async function analyzeTextFile(fileData) {
 
   return analysis;
 }
+
+export default analyzeTextFile;

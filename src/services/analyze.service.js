@@ -2,7 +2,8 @@ import uploadedFiles from "../utils/metaData.js";
 import fs from "fs";
 import path from "path";
 import readline from "readline";
-import { analyzeTextFile } from "../utils/textFileAnalyzer.js";
+import analyzeTextFile from "../analyzers/textAnalyzer.js";
+import { analyzeLogFile } from "../analyzers/logAnalyzer.js";
 
 const analyzeFile = async (fileId) => {
   const fileData = uploadedFiles.get(fileId);
@@ -10,6 +11,14 @@ const analyzeFile = async (fileId) => {
   if (type == "txt") {
     try {
       const analyzed = await analyzeTextFile(fileData);
+      return analyzed;
+    } catch (err) {
+      throw err;
+    }
+  }
+  if (type == "log") {
+    try {
+      const analyzed = await analyzeLogFile(fileData);
       return analyzed;
     } catch (err) {
       throw err;
