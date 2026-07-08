@@ -22,6 +22,7 @@
   "homepage": "https://github.com/Ameer77-tech/file-forge#readme",
   "dependencies": {
     "cors": "^2.8.6",
+    "csv-parse": "^7.0.1",
     "express": "^5.2.1",
     "helmet": "^8.2.0",
     "multer": "^2.2.0",

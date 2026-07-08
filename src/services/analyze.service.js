@@ -4,6 +4,7 @@ import path from "path";
 import readline from "readline";
 import analyzeTextFile from "../analyzers/textAnalyzer.js";
 import { analyzeLogFile } from "../analyzers/logAnalyzer.js";
+import { analyzeCsvFile } from "../analyzers/csvAnalyzer.js";
 
 const analyzeFile = async (fileId) => {
   const fileData = uploadedFiles.get(fileId);
@@ -19,6 +20,14 @@ const analyzeFile = async (fileId) => {
   if (type == "log") {
     try {
       const analyzed = await analyzeLogFile(fileData);
+      return analyzed;
+    } catch (err) {
+      throw err;
+    }
+  }
+  if (type == "csv") {
+    try {
+      const analyzed = await analyzeCsvFile(fileData);
       return analyzed;
     } catch (err) {
       throw err;
