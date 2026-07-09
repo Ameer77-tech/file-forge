@@ -13,6 +13,8 @@ export function createAnalysis(fileData) {
       size: fileData.size,
     },
 
+    recentEvents: [],
+
     statistics: {
       lines: 0,
       emptyLines: 0,

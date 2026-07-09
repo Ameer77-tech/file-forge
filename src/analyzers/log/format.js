@@ -1,27 +1,38 @@
 export function detectFormatFromLine(line) {
   const l = line;
+  const lt = l.trim();
 
-  if (/"level"\s*:\s*"/i.test(l) && /"msg"\s*:/i.test(l)) return "Pino";
-  if (/"level"\s*:\s*"/i.test(l) && /metadata|message|stack/i.test(l))
-    return "Winston";
+  if (lt.startsWith('{') && lt.endsWith('}')) {
+    if (/"level"\s*:\s*"/i.test(l) && /"msg"\s*:/i.test(l)) return "JSON (Pino)";
+    if (/"level"\s*:\s*"/i.test(l) && /metadata|message|stack/i.test(l)) return "JSON (Winston)";
+    if (/"level"\s*:\s*"/i.test(l) && /pid|hostname|time/i.test(l)) return "JSON (PM2)";
+    if (/"status"\s*:\s*\d{3}/i.test(l) && /method|url/i.test(l)) return "JSON (Morgan)";
+    return "JSON";
+  }
+
   if (
     /\b(GET|POST|PUT|PATCH|DELETE)\b/.test(l) &&
-    /HTTP\//i.test(l) &&
-    /" \d{3} /i.test(l)
-  )
+    /HTTP\//i.test(l)
+  ) {
+    if (l.toLowerCase().includes("nginx")) return "Nginx";
+    if (l.toLowerCase().includes("apache")) return "Apache";
     return "Nginx/Apache";
-  if (/"level"\s*:\s*"/i.test(l) && /pid|hostname|time/i.test(l))
-    return "PM2/Pino";
-  if (/"status"\s*:\s*\d{3}/i.test(l) && /method|url/i.test(l))
-    return "Express/Morgan";
-  if (/\bTRACE\b|\bDEBUG\b/.test(l) && /NestJS/.test(l)) return "NestJS";
-  if (/\bWARN|ERROR\b/.test(l) && /java.lang.|at\s+\w+\(/i.test(l))
-    return "Spring Boot";
-  if (/\bLaravel\b|\bIlluminate\\/i.test(l)) return "Laravel";
-  if (/\bINFO\b.*\b%[0-9]+\$s/.test(l)) return "Go logrus";
-  if (/\bTraceback \(/i.test(l) || /Python logging/.test(l)) return "Python";
+  }
 
-  return "Unknown";
+  if (/\bTRACE\b|\bDEBUG\b/.test(l) && /NestJS/.test(l)) return "Application Log (NestJS)";
+  if (/\bWARN|ERROR\b/.test(l) && /java\.lang\.|at\s+\w+\(/i.test(l)) return "Application Log (Spring Boot)";
+  if (/\bLaravel\b|\bIlluminate\\/i.test(l)) return "Application Log (Laravel)";
+  if (/\bINFO\b.*\b%[0-9]+\$s/.test(l)) return "Application Log (Go)";
+  if (/\bTraceback \(/i.test(l) || /Python logging/.test(l)) return "Application Log (Python)";
+
+  if (/\b(INFO|WARN|WARNING|ERROR|DEBUG|TRACE|FATAL)\b/i.test(l)) return "Application Log";
+
+  if (l.includes(',')) {
+    const parts = l.split(',');
+    if (parts.length > 3 && !l.includes('{') && !l.includes('[')) return "CSV";
+  }
+
+  return "Plain Text";
 }
 
 export function updateFormat(analysis, line) {

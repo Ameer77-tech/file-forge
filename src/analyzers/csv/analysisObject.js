@@ -19,6 +19,19 @@ export function createCsvAnalysis(fileData) {
       emptyRows: 0,
       totalCells: 0,
       emptyCells: 0,
+      totalNumericColumns: 0,
+      totalTextColumns: 0,
+      totalDateColumns: 0,
+      totalBooleanColumns: 0,
+      totalUniqueValuesAcrossDataset: 0,
+    },
+
+    validation: {
+      headerPresent: true,
+      delimiterUsed: ",", // We'll assume comma for now as csv-parse handles it automatically
+      malformedRows: 0,
+      inconsistentColumns: 0,
+      emptyColumns: 0,
     },
 
     columns: {},
@@ -42,6 +55,10 @@ export function createCsvAnalysis(fileData) {
       monetaryValues: 0,
       dates: 0,
       timestamps: 0,
+      panCards: 0,
+      aadhaar: 0,
+      creditCards: 0,
+      addresses: 0,
     },
 
     // Automatic type categorization

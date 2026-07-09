@@ -21,6 +21,11 @@ export function updateRequests(analysis, line) {
 
     analysis.requests.total++;
 
+    if (analysis._internal._lastHour) {
+      analysis._internal.hourlyRequests ??= {};
+      analysis._internal.hourlyRequests[analysis._internal._lastHour] = (analysis._internal.hourlyRequests[analysis._internal._lastHour] || 0) + 1;
+    }
+
     key = `${method} ${route}`;
     analysis._internal.endpointMap.set(
       key,
@@ -33,24 +38,41 @@ export function updateRequests(analysis, line) {
         count: 0,
         totalResponseTime: 0,
         failures: 0,
+        successes: 0,
       });
     }
     const stats = analysis._internal.endpointStats.get(key);
     stats.count++;
   }
 
-  const status = line.match(regex.status);
-
+  // Try structured status patterns first ("status":200, HTTP/1.1 200, etc.)
   let statusCode = null;
-  if (status) {
-    const code = Number(status[1]);
-    statusCode = code;
+  const structuredStatus = line.match(regex.status);
+  if (structuredStatus) {
+    statusCode = Number(structuredStatus[1]);
+  }
 
-    analysis.statusCodes.set(code, (analysis.statusCodes.get(code) || 0) + 1);
+  // If no structured match, try bare status code after HTTP method + endpoint
+  // e.g. "GET /api/users 200 18ms"
+  if (statusCode === null && hasMethodToken) {
+    const endpointStatus = line.match(regex.endpointStatus);
+    if (endpointStatus) {
+      statusCode = Number(endpointStatus[1]);
+    }
+  }
 
-    if (code >= 200 && code < 400) {
+  if (statusCode !== null) {
+    analysis.statusCodes.set(statusCode, (analysis.statusCodes.get(statusCode) || 0) + 1);
+
+    if (statusCode >= 200 && statusCode < 400) {
+      // 2xx = success, 3xx = redirect (not a failure)
       analysis.requests.successful++;
-    } else {
+      if (key) {
+        const stats = analysis._internal.endpointStats.get(key);
+        if (stats) stats.successes++;
+      }
+    } else if (statusCode >= 400) {
+      // 4xx and 5xx = failed
       analysis.requests.failed++;
       if (key) {
         const stats = analysis._internal.endpointStats.get(key);
@@ -59,7 +81,6 @@ export function updateRequests(analysis, line) {
     }
   }
 
-  // attach response time to endpoint stats when available
   // attach response time from performance module if present
   if (
     analysis._internal &&
@@ -105,9 +126,7 @@ export function finalizeRequests(analysis) {
 
   // most common status
   let mostCommon = null;
-  const entries = analysis.statusCodes.entries
-    ? analysis.statusCodes.entries()
-    : Object.entries(analysis.statusCodes);
+  const entries = Object.entries(analysis.statusCodes);
   for (const [code, cnt] of entries) {
     const c = Number(code);
     const count = Number(cnt);
@@ -116,25 +135,31 @@ export function finalizeRequests(analysis) {
   }
   analysis.mostCommonStatus = mostCommon;
 
-  // slowest endpoint (highest average response time)
+  // build enriched endpoint stats array
   const endpointStats = [...analysis._internal.endpointStats.entries()].map(
     ([endpoint, s]) => ({
       endpoint,
-      averageResponseTime: s.count ? s.totalResponseTime / s.count : 0,
+      averageResponseTime: s.count ? Number((s.totalResponseTime / s.count).toFixed(2)) : 0,
       failures: s.failures,
       count: s.count,
     }),
   );
 
-  endpointStats.sort((a, b) => b.averageResponseTime - a.averageResponseTime);
-  analysis.slowestEndpoint = endpointStats.length ? endpointStats[0] : null;
+  // slowest endpoint (highest average response time)
+  const bySlowest = endpointStats.slice().sort((a, b) => b.averageResponseTime - a.averageResponseTime);
+  analysis.slowestEndpoint = bySlowest.length ? bySlowest[0] : null;
 
-  // most error-prone endpoint by failure rate
-  endpointStats.sort(
-    (a, b) =>
-      b.failures / Math.max(1, b.count) - a.failures / Math.max(1, a.count),
-  );
-  analysis.mostErrorProneEndpoint = endpointStats.length
-    ? endpointStats[0]
-    : null;
+  // most error-prone endpoint by failure RATE (not absolute failures)
+  // Only consider endpoints that have at least one failure
+  const withFailures = endpointStats.filter(e => e.failures > 0);
+  if (withFailures.length > 0) {
+    withFailures.sort(
+      (a, b) => (b.failures / b.count) - (a.failures / a.count),
+    );
+    analysis.mostErrorProneEndpoint = withFailures[0];
+  } else {
+    // fall back to showing the one with the highest count if none have failures
+    const byCount = endpointStats.slice().sort((a, b) => b.count - a.count);
+    analysis.mostErrorProneEndpoint = byCount.length ? byCount[0] : null;
+  }
 }

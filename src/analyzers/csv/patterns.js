@@ -65,6 +65,26 @@ export function detectPatterns(analysis, value) {
   if (/^\d{4}-\d{2}-\d{2}[t ]\d{2}:\d{2}(:\d{2})?/.test(trimmed)) {
     analysis.detections.timestamps++;
   }
+
+  // PAN Card (Indian)
+  if (/^[a-z]{5}\d{4}[a-z]{1}$/.test(trimmed)) {
+    analysis.detections.panCards = (analysis.detections.panCards || 0) + 1;
+  }
+
+  // Aadhaar Card (Indian)
+  if (/^\d{4}[\s-]?\d{4}[\s-]?\d{4}$/.test(trimmed) && trimmed.length >= 12 && trimmed.length <= 14 && !/^\d{1,3}\.\d/.test(trimmed)) {
+    analysis.detections.aadhaar = (analysis.detections.aadhaar || 0) + 1;
+  }
+
+  // Credit Card (Basic pattern - Luhn is expensive so just pattern)
+  if (/^(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|6(?:011|5[0-9][0-9])[0-9]{12})$/.test(trimmed.replace(/[\s-]/g, ''))) {
+    analysis.detections.creditCards = (analysis.detections.creditCards || 0) + 1;
+  }
+
+  // Basic Address (very naive)
+  if (/\d+[\s]+[a-z0-9\s]+(?:street|st|avenue|ave|road|rd|boulevard|blvd|lane|ln|drive|dr)\b/i.test(trimmed)) {
+    analysis.detections.addresses = (analysis.detections.addresses || 0) + 1;
+  }
 }
 
 export function updatePatterns(analysis, row) {

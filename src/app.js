@@ -14,7 +14,7 @@ const app = express();
 app.use(httpLogger);
 app.use(
   cors({
-    origin: env.ORIGIN,
+    origin: [env.ORIGIN],
   }),
 );
 app.use(helmet());

@@ -36,18 +36,32 @@ export function updateTimeline(analysis, line) {
     timestamp = `${year}-${monNum}-${day}T${hh}:${mm}:${ss}Z`;
   }
 
-  if (!analysis.timeline.firstLog) {
+  const date = new Date(timestamp.replace(" ", "T"));
+  if (isNaN(date.getTime())) return;
+
+  if (
+    !analysis._internal.firstLogTime ||
+    date < analysis._internal.firstLogTime
+  ) {
+    analysis._internal.firstLogTime = date;
     analysis.timeline.firstLog = timestamp;
   }
 
-  analysis.timeline.lastLog = timestamp;
+  if (!analysis._internal.lastLogTime || date > analysis._internal.lastLogTime) {
+    analysis._internal.lastLogTime = date;
+    analysis.timeline.lastLog = timestamp;
+  }
 
   // extract hour robustly
   const hourMatch = timestamp.match(/T?(\d{2}):\d{2}:\d{2}/);
   let hour = "00";
   if (hourMatch) hour = hourMatch[1];
 
-  analysis.hourlyTraffic[hour] = (analysis.hourlyTraffic[hour] || 0) + 1;
+  analysis._internal.hourlyLogs ??= {};
+  analysis._internal.hourlyLogs[hour] =
+    (analysis._internal.hourlyLogs[hour] || 0) + 1;
+    
+  analysis._internal._lastHour = hour;
 }
 
 export function finalizeTimeline(analysis) {
@@ -55,9 +69,8 @@ export function finalizeTimeline(analysis) {
     return;
   }
 
-  const first = new Date(analysis.timeline.firstLog.replace(" ", "T"));
-
-  const last = new Date(analysis.timeline.lastLog.replace(" ", "T"));
+  const first = analysis._internal.firstLogTime;
+  const last = analysis._internal.lastLogTime;
 
   const seconds = Math.floor((last - first) / 1000);
 
@@ -67,12 +80,14 @@ export function finalizeTimeline(analysis) {
 
   analysis.timeline.duration = `${h}h ${m}m ${s}s`;
 
-  // convert hourlyTraffic object into sorted array with percentages
-  const total = analysis.requests.total || analysis.statistics.lines || 0;
+  const useRequests = analysis.requests.total > 0;
+  const source = useRequests ? (analysis._internal.hourlyRequests || {}) : (analysis._internal.hourlyLogs || {});
+  const total = useRequests ? analysis.requests.total : analysis.statistics.lines;
+
   const hours = [];
   for (let i = 0; i < 24; i++) {
     const hh = String(i).padStart(2, "0");
-    const count = analysis.hourlyTraffic[hh] || 0;
+    const count = source[hh] || 0;
     hours.push({
       hour: hh,
       count,

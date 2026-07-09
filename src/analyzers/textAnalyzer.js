@@ -49,12 +49,17 @@ async function analyzeTextFile(fileData) {
     },
 
     detections: {
-      emails: 0,
-      urls: 0,
-      phoneNumbers: 0,
-      ipv4: 0,
+      emails: { count: 0, items: [] },
+      urls: { count: 0, items: [] },
+      phoneNumbers: { count: 0, items: [] },
+      ipv4: { count: 0, items: [] },
     },
   };
+
+  const emailSet = new Set();
+  const urlSet = new Set();
+  const phoneSet = new Set();
+  const ipv4Set = new Set();
 
   let totalWordLength = 0;
   let inParagraph = false;
@@ -129,14 +134,27 @@ async function analyzeTextFile(fileData) {
       analysis.statistics.sentences += sentenceMatches.length;
     }
 
-    analysis.detections.emails += (line.match(emailRegex) ?? []).length;
+    const foundEmails = line.match(emailRegex) ?? [];
+    analysis.detections.emails.count += foundEmails.length;
+    foundEmails.forEach(e => emailSet.add(e));
 
-    analysis.detections.urls += (line.match(urlRegex) ?? []).length;
+    const foundUrls = line.match(urlRegex) ?? [];
+    analysis.detections.urls.count += foundUrls.length;
+    foundUrls.forEach(u => urlSet.add(u));
 
-    analysis.detections.phoneNumbers += (line.match(phoneRegex) ?? []).length;
+    const foundPhones = line.match(phoneRegex) ?? [];
+    analysis.detections.phoneNumbers.count += foundPhones.length;
+    foundPhones.forEach(p => phoneSet.add(p));
 
-    analysis.detections.ipv4 += (line.match(ipv4Regex) ?? []).length;
+    const foundIpv4 = line.match(ipv4Regex) ?? [];
+    analysis.detections.ipv4.count += foundIpv4.length;
+    foundIpv4.forEach(i => ipv4Set.add(i));
   }
+
+  analysis.detections.emails.items = Array.from(emailSet).slice(0, 50);
+  analysis.detections.urls.items = Array.from(urlSet).slice(0, 50);
+  analysis.detections.phoneNumbers.items = Array.from(phoneSet).slice(0, 50);
+  analysis.detections.ipv4.items = Array.from(ipv4Set).slice(0, 50);
 
   analysis.averages.wordsPerLine =
     analysis.statistics.lines === 0

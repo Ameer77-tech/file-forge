@@ -28,34 +28,34 @@ export function finalizeRecommendations(analysis) {
       recs.push("Investigate stack traces to pinpoint root causes.");
   }
 
-  if (analysis.slowestEndpoint) {
-    recs.push(
-      `Slowest endpoint: ${analysis.slowestEndpoint.endpoint} — avg ${Math.round(analysis.slowestEndpoint.averageResponseTime)}ms over ${analysis.slowestEndpoint.count} requests.`,
-    );
-  }
+  if (analysis.requests.total > 0) {
+    if (analysis.slowestEndpoint && analysis.slowestEndpoint.averageResponseTime > 0) {
+      recs.push(
+        `Slowest endpoint: ${analysis.slowestEndpoint.endpoint} — avg ${Math.round(analysis.slowestEndpoint.averageResponseTime)}ms over ${analysis.slowestEndpoint.count} requests.`,
+      );
+    }
 
-  if (analysis.mostErrorProneEndpoint) {
-    const rate = analysis.mostErrorProneEndpoint.count
-      ? (
-          (analysis.mostErrorProneEndpoint.failures /
-            analysis.mostErrorProneEndpoint.count) *
-          100
-        ).toFixed(2)
-      : "0.00";
-    recs.push(
-      `Most error-prone endpoint: ${analysis.mostErrorProneEndpoint.endpoint} — ${rate}% failures.`,
-    );
+    if (analysis.mostErrorProneEndpoint && analysis.mostErrorProneEndpoint.failures > 0) {
+      const rate = (
+        (analysis.mostErrorProneEndpoint.failures /
+          analysis.mostErrorProneEndpoint.count) *
+        100
+      ).toFixed(2);
+      recs.push(
+        `Most error-prone endpoint: ${analysis.mostErrorProneEndpoint.endpoint} — ${rate}% failures.`,
+      );
+    }
+
+    if (analysis.requests.successRate < 95) {
+      recs.push(
+        `Request success rate is ${analysis.requests.successRate}%. Investigate failed responses and upstream services.`,
+      );
+    }
   }
 
   if (analysis.duplicate && analysis.duplicate.duplicatePercentage > 0) {
     recs.push(
       `Detected ${analysis.duplicate.duplicates} duplicate lines (${analysis.duplicate.duplicatePercentage}%). Consider log deduplication or throttling.`,
-    );
-  }
-
-  if (analysis.requests.successRate < 95) {
-    recs.push(
-      `Request success rate is ${analysis.requests.successRate}%. Investigate failed responses and upstream services.`,
     );
   }
 

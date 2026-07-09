@@ -31,17 +31,27 @@ export function finalizeRecommendations(analysis) {
     }
   }
 
-  // Sensitive data
-  const sensitiveData = analysis.detections.emails + analysis.detections.uuids;
-  if (sensitiveData > 0) {
-    const parts = [];
-    if (analysis.detections.emails > 0)
-      parts.push(`${analysis.detections.emails} email(s)`);
-    if (analysis.detections.uuids > 0)
-      parts.push(`${analysis.detections.uuids} UUID(s)`);
+  // Sensitive data (PII)
+  const piiList = [
+    { name: 'Emails', count: analysis.detections.emails },
+    { name: 'UUIDs', count: analysis.detections.uuids },
+    { name: 'Phone Numbers', count: analysis.detections.phoneNumbers },
+    { name: 'IPs', count: analysis.detections.ipv4 + analysis.detections.ipv6 },
+    { name: 'PAN Cards', count: analysis.detections.panCards },
+    { name: 'Aadhaar', count: analysis.detections.aadhaar },
+    { name: 'Credit Cards', count: analysis.detections.creditCards },
+  ].filter(p => p.count > 0);
+
+  if (piiList.length > 0) {
+    const parts = piiList.map(p => `${p.count} ${p.name}`);
     recs.push(
-      `Contains ${parts.join(" and ")} — ensure proper data anonymization and protection.`,
+      `Contains PII: ${parts.join(", ")} — ensure proper data anonymization and protection before distributing.`,
     );
+  }
+
+  // Validation
+  if (analysis.validation.malformedRows > 0) {
+    recs.push(`Detected ${analysis.validation.malformedRows} malformed rows with inconsistent column counts. Ensure CSV generation is strictly consistent.`);
   }
 
   // Column-level recommendations

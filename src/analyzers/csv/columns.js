@@ -54,6 +54,10 @@ function initializeColumn(columnName) {
       outliersCount: 0,
       isIdentifier: false,
     },
+    date: {
+      min: null,
+      max: null,
+    },
     patterns: {
       detectedTypes: new Map(),
     },
@@ -116,6 +120,12 @@ export function updateColumns(analysis, headers, row) {
       column.numeric.sum = welford.sum;
       column.numeric.min = welford.min;
       column.numeric.max = welford.max;
+    } else if (type === "date" || type === "timestamp") {
+      const parsedDate = new Date(value).getTime();
+      if (!isNaN(parsedDate)) {
+        if (column.date.min === null || parsedDate < column.date.min) column.date.min = parsedDate;
+        if (column.date.max === null || parsedDate > column.date.max) column.date.max = parsedDate;
+      }
     }
   });
 }
@@ -227,12 +237,28 @@ export function finalizeColumns(analysis) {
 
     // Clean up for JSON serialization
     column.stats.uniqueValues = column.stats.uniqueCount; // Replace Set with count
+    analysis.statistics.totalUniqueValuesAcrossDataset += column.stats.uniqueCount;
+    
     column.stats.frequency = Array.from(column.stats.frequency.entries())
+      .sort((a, b) => b[1] - a[1]) // Sort descending
       .slice(0, 10) // Only keep top 10 for output
       .map(([value, count]) => ({ value, count }));
     column.patterns.detectedTypes = undefined;
 
+    if (column.date && column.date.min !== null) {
+      column.date.min = new Date(column.date.min).toISOString();
+      column.date.max = new Date(column.date.max).toISOString();
+    } else {
+      delete column.date;
+    }
+
     // Remove numeric.count from output if not needed
     delete column.numeric.count;
   }
+  
+  // Populate dataset summary
+  analysis.statistics.totalNumericColumns = analysis.typeDetection.numeric.length;
+  analysis.statistics.totalTextColumns = analysis.typeDetection.text.length + analysis.typeDetection.categorical.length;
+  analysis.statistics.totalDateColumns = analysis.typeDetection.date.length;
+  analysis.statistics.totalBooleanColumns = analysis.typeDetection.boolean.length;
 }

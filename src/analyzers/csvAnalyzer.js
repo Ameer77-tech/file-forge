@@ -47,6 +47,11 @@ export async function analyzeCsvFile(fileData) {
 
           isFirstRow = false;
         } else {
+          if (record.length !== headers.length) {
+            analysis.validation.inconsistentColumns++;
+            analysis.validation.malformedRows++;
+          }
+          
           updateStatistics(analysis, record);
           updateColumns(analysis, headers, record);
           updateDuplicates(analysis, record);

@@ -4,7 +4,7 @@ export function detectDataType(value) {
   const trimmed = value.trim().toLowerCase();
 
   // Boolean (must be before numeric)
-  if (trimmed === "true" || trimmed === "false") return "boolean";
+  if (/^(true|false|yes|no|y|n|0|1)$/i.test(trimmed)) return "boolean";
 
   // UUID (must be before numeric as UUIDs contain hyphens)
   if (

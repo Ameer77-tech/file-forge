@@ -16,7 +16,7 @@ export function updatePerformance(analysis, line) {
 
   if (!match) return;
 
-  const responseTime = Number(match[1]);
+  const responseTime = Number(match[1] || match[2]);
 
   analysis._internal.totalResponseTime ??= 0;
   analysis._internal.responseTimeCount ??= 0;
