@@ -10,25 +10,31 @@ import {
 import SuccessResponse from "../utils/SuccessResponse.js";
 import NotFoundError from "../errors/NotFound.js";
 import uploadedFiles from "../utils/metaData.js";
+import { uploadLimiter } from "../middlewares/rateLimit.js";
 
 const router = express.Router();
 
-router.post("/upload", validateUpload, (req, res, next) => {
-  const contentType = req.headers["content-type"] || "";
-  const normalizedType = contentType.toLowerCase();
+router.post(
+  "/upload",
+  uploadLimiter,
+  validateUpload,
+  (req, res, next) => {
+    const contentType = req.headers["content-type"] || "";
+    const normalizedType = contentType.toLowerCase();
 
-  if (normalizedType.includes("multipart/form-data")) {
-    return upload.single("file")(req, res, (err) => {
-      if (err) {
-        return next(err);
-      }
+    if (normalizedType.includes("multipart/form-data")) {
+      return upload.single("file")(req, res, (err) => {
+        if (err) {
+          return next(err);
+        }
 
-      return uploadController(req, res, next);
-    });
-  }
+        return uploadController(req, res, next);
+      });
+    }
 
-  return uploadController(req, res, next);
-});
+    return uploadController(req, res, next);
+  },
+);
 
 // Manual file deletion endpoint
 router.delete("/files/:id", (req, res, next) => {
