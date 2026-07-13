@@ -11,11 +11,13 @@ import SuccessResponse from "../utils/SuccessResponse.js";
 import NotFoundError from "../errors/NotFound.js";
 import uploadedFiles from "../utils/metaData.js";
 import { uploadLimiter } from "../middlewares/rateLimit.js";
+import { checkDiskSpace } from "../middlewares/diskSpace.middleware.js";
 
 const router = express.Router();
 
 router.post(
   "/upload",
+  checkDiskSpace,
   uploadLimiter,
   validateUpload,
   (req, res, next) => {

@@ -4,7 +4,6 @@ import {
   saveMultipartUpload,
   saveRawUpload,
 } from "../services/upload.service.js";
-import { scheduleFileCleanup } from "../utils/fileCleanup.js";
 import SuccessResponse from "../utils/SuccessResponse.js";
 
 export const uploadController = (req, res, next) => {
@@ -18,9 +17,6 @@ export const uploadController = (req, res, next) => {
         { event: "upload.controller.success" },
         "Multipart upload handled",
       );
-
-      // Schedule file cleanup
-      scheduleFileCleanup(uploadResult, env.FILE_CLEANUP_TIME);
 
       return res.status(200).json({
         success: true,
@@ -47,9 +43,6 @@ export const uploadController = (req, res, next) => {
     });
 
     logger.info({ event: "upload.controller.success" }, "Raw upload handled");
-
-    // Schedule file cleanup
-    scheduleFileCleanup(uploadResult, env.FILE_CLEANUP_TIME);
 
     return SuccessResponse(
       "File Uploaded Successfully",
